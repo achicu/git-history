@@ -1,26 +1,10 @@
-var split = require('event-stream').split;
-var run = require('comandante');
-var through = require('through');
+var es = require('event-stream');
 
-exports = module.exports = function (since, until) {
-    var data = '';
-    var sp = split();
-    var tr = through(write, end);
-    sp.pipe(tr);
-    
-    var piped = false;
-    sp.on('pipe', function () {
-        piped = true;
-    });
-    
-    process.nextTick(function () {
-        if (!piped) history(since, until).pipe(sp);
-    });
-    
+exports = module.exports = function () {
+    return es.pipeline(es.split(), es.through(write, end));
+
     var commit = null;
-    
-    return tr;
-    
+        
     function write (line) {
         var m;
         if (m = /^commit\s+(\S+)/i.exec(line)) {
@@ -49,12 +33,3 @@ exports = module.exports = function (since, until) {
         this.emit('end');
     }
 };
-
-function history (since, until) {
-    if (since === undefined) {
-        return run('git', [ 'log' ]);
-    }
-    else {
-        return run('git', [ 'log', (since || '') + '..' + (until || '') ]);
-    }
-}
