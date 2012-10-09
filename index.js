@@ -24,8 +24,11 @@ exports = module.exports = function (since, until) {
     function write (line) {
         var m;
         if (m = /^commit\s+(\S+)/i.exec(line)) {
-            if (commit) this.emit('data', commit);
-            commit = { hash : line.split(/\s+/)[1] };
+            if (commit) {
+                commit.message = commit.message.join("\n");
+                this.emit('data', commit);
+            }
+            commit = { hash : line.split(/\s+/)[1], message: [] };
         }
         else if (m = /^Author:\s+(.+?)(?: <([^>]+)>)?$/i.exec(line)) {
             commit.author = {
@@ -37,7 +40,7 @@ exports = module.exports = function (since, until) {
             commit.date = new Date(m[1]);
         }
         else if (m = /^\s+(.+)/.exec(line)) {
-            commit.message = m[1];
+            commit.message.push(m[1]);
         }
     }
     
