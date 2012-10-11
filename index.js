@@ -29,6 +29,7 @@ exports = module.exports = function () {
     }
     
     function end () {
+        commit.message = commit.message.join("\n");
         this.emit('data', commit);
         this.emit('end');
     }
