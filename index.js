@@ -4,14 +4,18 @@ exports = module.exports = function () {
     return es.pipeline(es.split(), es.through(write, end));
 
     var commit = null;
+
+    function pushCommit() {
+        if (commit) {
+            commit.message = commit.message.join("\n");
+            this.emit('data', commit);
+        }
+    }
         
     function write (line) {
         var m;
         if (m = /^commit\s+(\S+)/i.exec(line)) {
-            if (commit) {
-                commit.message = commit.message.join("\n");
-                this.emit('data', commit);
-            }
+            pushCommit();
             commit = { hash : line.split(/\s+/)[1], message: [] };
         }
         else if (m = /^Author:\s+(.+?)(?: <([^>]+)>)?$/i.exec(line)) {
@@ -29,8 +33,7 @@ exports = module.exports = function () {
     }
     
     function end () {
-        commit.message = commit.message.join("\n");
-        this.emit('data', commit);
+        pushCommit();
         this.emit('end');
     }
 };
