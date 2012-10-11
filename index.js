@@ -5,17 +5,17 @@ exports = module.exports = function () {
 
     var commit = null;
 
-    function pushCommit() {
+    function pushCommit(stream) {
         if (commit) {
             commit.message = commit.message.join("\n");
-            this.emit('data', commit);
+            stream.emit('data', commit);
         }
     }
         
     function write (line) {
         var m;
         if (m = /^commit\s+(\S+)/i.exec(line)) {
-            pushCommit();
+            pushCommit(this);
             commit = { hash : line.split(/\s+/)[1], message: [] };
         }
         else if (m = /^Author:\s+(.+?)(?: <([^>]+)>)?$/i.exec(line)) {
@@ -33,7 +33,7 @@ exports = module.exports = function () {
     }
     
     function end () {
-        pushCommit();
+        pushCommit(this);
         this.emit('end');
     }
 };
